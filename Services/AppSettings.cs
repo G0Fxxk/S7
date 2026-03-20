@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace S7WpfApp.Services;
 
 /// <summary>
-/// 应用设置服务 - 替代 MAUI Preferences，使用 JSON 文件持久化
+/// 应用设置服务 -使用 JSON 文件持久化
 /// </summary>
 public static class AppSettings
 {
