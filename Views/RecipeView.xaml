@@ -1,0 +1,209 @@
+<UserControl x:Class="S7WpfApp.Views.RecipeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource PageBgBrush}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══ 顶部工具栏 ═══ -->
+        <Border Grid.Row="0" Background="{StaticResource CardBgBrush}"
+                CornerRadius="8" Padding="12,8" Margin="0,0,0,12"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <WrapPanel Orientation="Horizontal">
+                <Button Content="📋 新建配方表" Click="OnCreateTable" Margin="0,0,8,0"
+                        Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <Button Content="🗑️ 删除表" Click="OnDeleteTable" Margin="0,0,8,0"
+                        Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="4,2"/>
+                <Button Content="📥 从PLC读取" Click="OnReadFromPlc" Margin="8,0,8,0"/>
+                <Button Content="📤 写入PLC" Click="OnWriteToPlc" Margin="0,0,8,0"/>
+                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="4,2"/>
+                <Button Content="💾 导出CSV" Click="OnExportCsv" Margin="8,0,8,0"/>
+                <Button Content="📂 导入CSV" Click="OnImportCsv" Margin="0,0,8,0"/>
+                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="4,2"/>
+                <Button Content="✅ 保存值" Click="OnSaveValues" Margin="8,0,0,0"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- ═══ 主内容区 ═══ -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 左侧：配方表列表 -->
+            <Border Grid.Column="0" Background="{StaticResource CardBgBrush}"
+                    CornerRadius="8" Padding="8" Margin="0,0,12,0"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="📋 配方表" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{StaticResource AccentBrush}" Margin="4,0,0,8"/>
+                    <ListBox x:Name="TableList"
+                             ItemsSource="{Binding Tables}"
+                             SelectedItem="{Binding SelectedTable, Mode=TwoWay}"
+                             Background="Transparent" BorderThickness="0"
+                             DisplayMemberPath="Name"
+                             FontSize="13"/>
+                </DockPanel>
+            </Border>
+
+            <!-- 右侧：数据集选择 + 变量表格 + 日志 -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="140"/>
+                </Grid.RowDefinitions>
+
+                <!-- 数据集选择区 -->
+                <Border Grid.Row="0" Background="{StaticResource CardBgBrush}"
+                        CornerRadius="8" Padding="12,8" Margin="0,0,0,8"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="数据集:" VerticalAlignment="Center"
+                                   Foreground="{StaticResource TextPrimaryBrush}" FontSize="13" Margin="0,0,8,0"/>
+                        <ComboBox x:Name="DataSetCombo" Width="200"
+                                  ItemsSource="{Binding DataSets}"
+                                  SelectedItem="{Binding SelectedDataSet, Mode=TwoWay}"
+                                  DisplayMemberPath="Name"/>
+                        <Button Content="➕ 新建" Click="OnCreateDataSet" Margin="12,0,0,0"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        <Button Content="🗑️ 删除" Click="OnDeleteDataSet" Margin="8,0,0,0"
+                                Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- 变量 DataGrid -->
+                <Border Grid.Row="1" Background="{StaticResource CardBgBrush}"
+                        CornerRadius="8" Padding="4" Margin="0,0,0,8"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <DockPanel>
+                        <!-- 变量管理按钮 -->
+                        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="8,4"
+                                    Visibility="{Binding IsAdmin, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Button Content="➕ 添加变量" Click="OnAddVariable" Margin="0,0,8,0"/>
+                            <Button Content="🗑️ 移除变量" Click="OnRemoveVariable"/>
+                        </StackPanel>
+
+                        <DataGrid x:Name="VariableGrid"
+                                  ItemsSource="{Binding VariableRows}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  CanUserDeleteRows="False"
+                                  CanUserSortColumns="False"
+                                  SelectionMode="Single"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  FontSize="13"
+                                  RowHeight="30"
+                                  ColumnHeaderHeight="32">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="变量名" Binding="{Binding Name}" Width="140" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="地址" Binding="{Binding Address}" Width="130" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="符号名" Binding="{Binding SymbolName}" Width="130" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="类型" Binding="{Binding DataType}" Width="70" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="设定值" Binding="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    Width="120">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="4,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                    <DataGridTextColumn.EditingElementStyle>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                                            <Setter Property="Background" Value="{StaticResource InputBgBrush}"/>
+                                            <Setter Property="Padding" Value="4,2"/>
+                                        </Style>
+                                    </DataGridTextColumn.EditingElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="PLC读取值" Binding="{Binding PlcValue}" Width="120" IsReadOnly="True">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource SuccessBrush}"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="4,0"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="备注" Binding="{Binding Comment}" Width="*" IsReadOnly="True"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+
+                <!-- 分隔 -->
+                <GridSplitter Grid.Row="2" Height="4" HorizontalAlignment="Stretch"
+                              Background="Transparent" ResizeDirection="Rows"/>
+
+                <!-- 日志区域 -->
+                <Border Grid.Row="3" Background="{StaticResource CardBgBrush}"
+                        CornerRadius="8" Padding="8"
+                        BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,0,0,4">
+                            <TextBlock Text="📝 操作日志" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextSecondaryBrush}"/>
+                            <Button Content="📂 打开日志文件夹" Click="OnOpenLogFolderClick" 
+                                    Margin="12,0,0,0" Padding="6,2"
+                                    FontSize="10" Background="Transparent" 
+                                    BorderBrush="{StaticResource BorderBrush}"
+                                    Foreground="{StaticResource TextSecondaryBrush}"/>
+                        </StackPanel>
+                        <TextBox Text="{Binding LogText, Mode=OneWay}"
+                                 IsReadOnly="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 FontSize="11"
+                                 Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ═══ 底部状态栏 ═══ -->
+        <Border Grid.Row="2" Background="{StaticResource CardBgBrush}"
+                CornerRadius="6" Padding="12,6" Margin="0,8,0,0"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Ellipse Width="8" Height="8" Margin="0,0,6,0"
+                             Fill="{Binding IsConnected, Converter={StaticResource BoolToColorConverter}}"/>
+                    <TextBlock FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
+                               VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="PLC 未连接"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="Text" Value="PLC 已连接"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,80 @@
+<Window x:Class="S7WpfApp.Views.TrendWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="📈 趋势监控" Height="500" Width="800"
+        WindowStartupLocation="CenterOwner"
+        Background="#F0F2F5">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶部信息 -->
+        <Border Grid.Row="0" Background="#FFFFFF" CornerRadius="10" Padding="16,10"
+                BorderBrush="#D0D0D0" BorderThickness="1" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock x:Name="VarNameText" Text="变量名" FontSize="16" FontWeight="Bold"
+                               Foreground="#00796B"/>
+                    <TextBlock x:Name="VarAddressText" Text="地址" FontSize="11"
+                               Foreground="#757575"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="当前值" FontSize="10" Foreground="#757575" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="CurrentValueText" Text="--" FontSize="22" FontWeight="Bold"
+                                   Foreground="#333333" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="最大" FontSize="10" Foreground="#757575" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="MaxValueText" Text="--" FontSize="14" 
+                                   Foreground="#D32F2F" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Margin="0,0,20,0">
+                        <TextBlock Text="最小" FontSize="10" Foreground="#757575" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="MinValueText" Text="--" FontSize="14" 
+                                   Foreground="#00796B" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="平均间隔" FontSize="10" Foreground="#757575" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="AvgIntervalText" Text="--" FontSize="14" 
+                                   Foreground="#FF8F00" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" x:Name="ChartBorder" Background="#F5F5F5" CornerRadius="10"
+                BorderBrush="#D0D0D0" BorderThickness="1" Padding="2"
+                SizeChanged="OnChartSizeChanged">
+            <Image x:Name="ChartImage" Stretch="Fill"
+                   RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+        </Border>
+
+        <!-- 底部控制 -->
+        <Border Grid.Row="2" Background="#FFFFFF" CornerRadius="10" Padding="12,8"
+                BorderBrush="#D0D0D0" BorderThickness="1" Margin="0,10,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <TextBlock Text="采样间隔(ms):" Foreground="#757575" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBox x:Name="IntervalBox" Width="70" Text="500" VerticalAlignment="Center"
+                         KeyDown="OnIntervalKeyDown"/>
+                <Button Content="✅ 应用" Click="OnApplyIntervalClick" Margin="6,0,0,0" Padding="10,5"/>
+                <Button x:Name="StartStopBtn" Content="▶ 开始" Click="OnStartStopClick" 
+                        Margin="12,0,0,0" Padding="16,6"/>
+                <Button Content="🗑️ 清除" Click="OnClearClick" Margin="8,0,0,0" Padding="12,6"/>
+                <Button Content="📄 导出PDF" Click="OnExportPdfClick" Margin="8,0,0,0" Padding="12,6"/>
+                <TextBlock x:Name="SampleCountText" Text="采样: 0" Foreground="#757575" 
+                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                <TextBlock x:Name="MemoryText" Text="内存: --" Foreground="#757575" 
+                           VerticalAlignment="Center" Margin="12,0,0,0"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

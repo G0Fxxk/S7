@@ -1,0 +1,92 @@
+<Window x:Class="S7WpfApp.Views.SymbolManageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="📋 符号管理" Width="700" Height="520"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource PageBgBrush}">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- ═══ 顶部工具栏 ═══ -->
+        <Border Grid.Row="0" Background="{StaticResource CardBgBrush}" CornerRadius="10"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                Padding="16,10" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="BackBtn" Content="⬅ 返回分组" Click="OnBackClick"
+                        Visibility="Collapsed" Margin="0,0,12,0"/>
+                <TextBlock x:Name="TitleText" Grid.Column="1" Text="符号分组" FontSize="15"
+                           FontWeight="Bold" Foreground="{StaticResource AccentBrush}"
+                           VerticalAlignment="Center"/>
+                <TextBlock x:Name="CountText" Grid.Column="2"
+                           Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- ═══ 分组列表 ═══ -->
+        <Border x:Name="GroupPanel" Grid.Row="1" Background="{StaticResource CardBgBrush}"
+                CornerRadius="10" BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1" Padding="4">
+            <ListView x:Name="GroupList" Background="Transparent" BorderThickness="0"
+                      Foreground="{StaticResource TextPrimaryBrush}"
+                      MouseDoubleClick="OnGroupDoubleClick">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="分组名称" Width="400" DisplayMemberBinding="{Binding Name}"/>
+                        <GridViewColumn Header="符号数" Width="80" DisplayMemberBinding="{Binding Count}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+        <!-- ═══ 符号列表（默认隐藏） ═══ -->
+        <Border x:Name="SymbolPanel" Grid.Row="1" Background="{StaticResource CardBgBrush}"
+                CornerRadius="10" BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1" Padding="4" Visibility="Collapsed">
+            <ListView x:Name="SymbolList" Background="Transparent" BorderThickness="0"
+                      Foreground="{StaticResource TextPrimaryBrush}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="符号名" Width="160" DisplayMemberBinding="{Binding Name}"/>
+                        <GridViewColumn Header="地址" Width="120" DisplayMemberBinding="{Binding Address}"/>
+                        <GridViewColumn Header="数据类型" Width="80" DisplayMemberBinding="{Binding DataType}"/>
+                        <GridViewColumn Header="原始路径" Width="140" DisplayMemberBinding="{Binding OriginalSymbolPath}"/>
+                        <GridViewColumn Header="操作" Width="80">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="🗑️ 删除" Tag="{Binding}" Click="OnDeleteSymbolClick"
+                                            Padding="6,2" FontSize="11">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                                <Setter Property="Background" Value="#FFEBEE"/>
+                                                <Setter Property="Foreground" Value="#D32F2F"/>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+        <!-- ═══ 底部状态 ═══ -->
+        <Border Grid.Row="2" Background="{StaticResource CardBgBrush}" CornerRadius="10"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                Padding="16,8" Margin="0,10,0,0">
+            <TextBlock x:Name="StatusText" Text="双击分组查看符号"
+                       Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+        </Border>
+    </Grid>
+</Window>

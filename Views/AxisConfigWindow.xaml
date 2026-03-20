@@ -1,0 +1,34 @@
+<Window x:Class="S7WpfApp.Views.AxisConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="轴地址配置" Height="620" Width="560"
+        WindowStartupLocation="CenterOwner" Background="#F0F2F5"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText" Text="配置轴" FontSize="18" FontWeight="Bold"
+                   Foreground="#00796B" Margin="0,0,0,14"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="AddressPanel"/>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0">
+            <Button Content="保存" Click="OnSaveClick" Padding="24,10" Margin="0,0,10,0">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Background" Value="#00796B"/>
+                        <Setter Property="Foreground" Value="White"/>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="取消" Click="OnCancelClick" Padding="24,10"/>
+        </StackPanel>
+    </Grid>
+</Window>

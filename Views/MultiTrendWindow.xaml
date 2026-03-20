@@ -1,0 +1,226 @@
+<Window x:Class="S7WpfApp.Views.MultiTrendWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+        mc:Ignorable="d"
+        Title="多变量轨迹分析" Height="800" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
+
+    <Window.Resources>
+        <!-- 基础样式 (工业暗黑风) -->
+        <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="SurfaceBrush" Color="#2D2D2D"/>
+        <SolidColorBrush x:Key="BorderBrush" Color="#404040"/>
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#D7D7D7"/>
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9E9E9E"/>
+        <SolidColorBrush x:Key="PrimaryColor" Color="#2980B9"/>
+        <SolidColorBrush x:Key="ActionColor" Color="#27AE60"/>
+        <SolidColorBrush x:Key="DangerColor" Color="#C0392B"/>
+
+        <!-- TextBox Style -->
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Tool Bar Style -->
+        <Style TargetType="Border" x:Key="ToolBarBorder">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <Style x:Key="RightAlignStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 顶部工具栏 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 图表按钮栏 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 图表绘制区 (占大部分空间) -->
+            <RowDefinition Height="*"/>
+            <!-- 拖动分割线 -->
+            <RowDefinition Height="5"/>
+            <!-- 底部 DataGrid (变量清单区) -->
+            <RowDefinition Height="200"/>
+        </Grid.RowDefinitions>
+
+        <!-- ======================= 顶部工具栏 ======================= -->
+        <Border Grid.Row="0" Style="{StaticResource ToolBarBorder}">
+            <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,0">
+                <!-- 变量添加区 -->
+                <TextBlock Text="新建通道: " VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold"/>
+                
+                <Button Content="📂 符号库" Click="OnSelectSymbolClick" ToolTip="按分组选择已有符号变量" 
+                        Background="Transparent" BorderBrush="{StaticResource BorderBrush}" Margin="0,0,8,0" />
+                        
+                <TextBox x:Name="NameBox" Width="120" Margin="0,0,8,0" ToolTip="自定义曲线名称"/>
+                          
+                <TextBox x:Name="AddressBox" Width="120" Margin="0,0,8,0" ToolTip="PLC 绝对地址如 DB103.DBD0, M10.2等"/>
+                
+                <Button Content="➕ 添加" Click="OnAddChannelClick"
+                        Background="{StaticResource PrimaryColor}" Foreground="White" BorderThickness="0"
+                        Margin="0,0,24,0"/>
+
+                <!-- 采样控制区 -->
+                <TextBlock Text="采样配置: " VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold"/>
+                
+                <TextBlock Text="极速周期(ms)=" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBox x:Name="IntervalBox" Width="50" Text="20" Margin="4,0,12,0" 
+                         KeyDown="OnIntervalKeyDown"/>
+
+                <Button x:Name="StartStopBtn" Content="▶ 开始采样" Click="OnStartStopClick"
+                        Background="{StaticResource ActionColor}" Foreground="White" BorderThickness="0"
+                        FontWeight="Bold" Padding="16,6" Margin="0,0,12,0"/>
+                
+                <TextBlock x:Name="AvgTimeText" Text="Avg: -- ms" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                <TextBlock x:Name="SampleCountText" Text="采样: 0" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBlock x:Name="MemoryText" Text="内存: --" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}"/>
+                
+                <Button Content="💾 导出报表" Click="OnExportReportClick" Margin="0,0,12,0" ToolTip="支持 PDF图表 和 CSV数据源 导出"/>
+                <Button Content="🧹 清除波形" Click="OnClearChartClick" Margin="0,0,12,0"/>
+                <Button Content="🗑 清空通道" Click="OnClearChannelsClick" 
+                        Foreground="{StaticResource DangerColor}" BorderBrush="{StaticResource DangerColor}"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- ======================= 图表工具栏 ======================= -->
+        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" Padding="4,2">
+            <WrapPanel Orientation="Horizontal">
+                <Button x:Name="CursorBtn" Content="📏 游标" Click="OnToggleCursorClick" 
+                        ToolTip="开启/关闭游标测量" Margin="0,0,6,0" Padding="8,4"/>
+                <Button x:Name="PauseBtn" Content="⏸ 暂停" Click="OnTogglePauseClick" 
+                        ToolTip="暂停/恢复自动滚动" Margin="0,0,6,0" Padding="8,4"/>
+                <Button Content="🔍 自动缩放" Click="OnAutoScaleClick" 
+                        ToolTip="自动缩放数据幅度区间" Margin="0,0,6,0" Padding="8,4"/>
+                <Button Content="🔄 重置" Click="OnResetViewClick" 
+                        ToolTip="重置视图并恢复自动滚动" Margin="0,0,6,0" Padding="8,4"/>
+                
+                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="6,2,12,2" />
+
+                <TextBlock Text="时间尺度(X轴):" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,4,0"/>
+                <Button Content="➖ 缩小" Click="OnZoomOutTimeClick" Padding="6,2" ToolTip="增加观测周期，显示更远的历史数据" />
+                <TextBlock x:Name="WindowTimeText" Text="60.0 s" VerticalAlignment="Center" Width="55" TextAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource ActionColor}"/>
+                <Button Content="➕ 放大" Click="OnZoomInTimeClick" Padding="6,2" ToolTip="缩短观测周期，放大波形高频细节" Margin="0,0,12,0" />
+
+                <Border Width="1" Background="{StaticResource BorderBrush}" Margin="0,2,12,2" />
+
+                <Button Content="💾 保存图片" Click="OnSaveImageClick" 
+                        ToolTip="保存图表为PNG" Margin="0,0,6,0" Padding="8,4"/>
+                <Button Content="📋 复制图片" Click="OnCopyImageClick" 
+                        ToolTip="复制图表图片到剪贴板" Margin="0,0,6,0" Padding="8,4"/>
+            </WrapPanel>
+        </Border>
+
+        <!-- ======================= 多轨道独立图表区 ======================= -->
+        <ScrollViewer Grid.Row="2" x:Name="PlotsScrollViewer" Background="#1E1E1E" 
+                      HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                      SizeChanged="OnPlotsScrollViewerSizeChanged">
+            <StackPanel x:Name="PlotsPanel" Orientation="Vertical" />
+        </ScrollViewer>
+
+        <!-- ======================= GridSplitter ======================= -->
+        <GridSplitter Grid.Row="3" Height="5" HorizontalAlignment="Stretch" Background="#333333" ShowsPreview="True"/>
+
+        <!-- ======================= 底部已添加信号 DataGrid ======================= -->
+        <DataGrid Grid.Row="4" x:Name="ChannelsGrid" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False" CanUserDeleteRows="False"
+                  HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="{StaticResource BorderBrush}"
+                  BorderThickness="0"
+                  Background="{StaticResource SurfaceBrush}"
+                  RowHeight="32"
+                  Margin="0">
+            <DataGrid.Columns>
+                <!-- 是否监控 -->
+                <DataGridTemplateColumn Header="监控">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                
+                <!-- 颜色图例 -->
+                <DataGridTemplateColumn Header="颜色" Width="50">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Padding="0" BorderThickness="0" Background="Transparent" Cursor="Hand"
+                                    Click="OnColorBlockClick" Tag="{Binding}" ToolTip="点击切换颜色">
+                                <Border Width="20" Height="20" CornerRadius="4" Margin="0,0,0,0">
+                                    <Border.Background>
+                                        <SolidColorBrush Color="{Binding LinePen.Brush.Color}" />
+                                    </Border.Background>
+                                </Border>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                
+                <DataGridTextColumn Header="名称" Binding="{Binding Name}" Width="150" IsReadOnly="True" />
+                <DataGridTextColumn Header="数据类型" Binding="{Binding DataType}" Width="80" IsReadOnly="True"/>
+                <DataGridTextColumn Header="地址" Binding="{Binding Address}" Width="100" IsReadOnly="True" />
+                
+                <DataGridTextColumn Header="实时值" Binding="{Binding CurrentValueText}" Width="80" IsReadOnly="True" 
+                                    ElementStyle="{StaticResource RightAlignStyle}"/>
+                
+                <DataGridTextColumn Header="(Min / Max)" Binding="{Binding MinMaxText}" Width="120" IsReadOnly="True"
+                                    Foreground="Gray"/>
+
+                <!-- 删除按钮 -->
+                <DataGridTemplateColumn Header="操作" Width="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="删除" Tag="{Binding}" Click="OnDeleteChannelClick"
+                                    Foreground="{StaticResource DangerColor}" BorderThickness="0" Background="Transparent" Padding="4,2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+            
+            <DataGrid.Resources>
+                <!-- Cell 样式 -->
+                <Style TargetType="DataGridCell">
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="8,4"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                                    <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.Resources>
+        </DataGrid>
+    </Grid>
+</Window>
